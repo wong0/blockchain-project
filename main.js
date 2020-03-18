@@ -41,10 +41,33 @@ class Blockchain{
         newBlock.hash = newBlock.calculateHash();
         this.chain.push(newBlock);
     }
+
+    isChainValid() {
+        for(let i = 1; i < this.chain.length; i++) {
+            const currentBlock = this.chain[i];
+            const previousBlock = this.chain[i-1];
+            
+            // if any current block hash is not equal to hash of its contents, return invalid.
+            if (
+                currentBlock.hash !== currentBlock.calculateHash() ||
+                currentBlock.previousHash !== previousBlock.hash
+            ) {
+                return false;
+            };
+        }
+        return true;
+    }
 }
 
+// Demo 1: Add block
 let xcoin = new Blockchain();
 xcoin.addBlock(new Block(1, "10/07/2017", { datakey: "datavalue"}));
 xcoin.addBlock(new Block(1, "10/07/2017", { datakey: "datavalue"}));
 
 console.log(JSON.stringify(xcoin, null, 4));
+
+// Demo 2: isChainValid
+console.log('BEFORE EDIT: xcoin.isChainValid()', xcoin.isChainValid());
+xcoin.chain[1].data = { amount: 123 };
+console.log('AFTER EDIT: xcoin.isChainValid()', xcoin.isChainValid());
+
