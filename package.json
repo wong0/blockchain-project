@@ -1,0 +1,9 @@
+{
+    "name": "blockchain-project",
+    "version": "0.0.1",
+    "license": "To Be Determined",
+    "description": "Create a blockchain that is transactable, minable.",
+    "dependencies": {
+        "crypto-js": "^4.0.0"
+    }
+}
