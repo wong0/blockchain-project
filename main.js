@@ -1,121 +1,8 @@
-const SHA256 = require('crypto-js/sha256');
+const Block = require('./Block');
+const Blockchain = require('./Blockchain');
 
-class Transaction {
-    constructor(fromAddress, toAddress, amount) {
-        this.fromAddress = fromAddress;
-        this.toAddress = toAddress;
-        this.amount = amount;
-    }
-}
-
-class Block {
-    constructor(timestamp, transactions, previousHash = ''){
-        this.timestamp = timestamp;
-        this.transactions = transactions;
-        this.previousHash = previousHash;
-        this.hash = '';
-        this.nonce = 0;
-    }
-
-    /**
-     * Hash of index, previousHash, timestamp, data.
-     */
-    calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
-    }
-
-    mineBlock(difficulty){
-        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")){
-            this.nonce++;
-            this.hash = this.calculateHash();
-        }
-        console.log("Block mined:" + this.hash);
-    }
-}
-
-class Blockchain{
-    constructor(){
-        this.chain = [this.createGenesisBlock()];
-        this.difficulty = 1;
-        this.pendingTransactions = [];
-        this.miningReward = 100;
-    }
-
-    /**
-     * The first block of the blockchain
-     */
-    createGenesisBlock(){
-        console.log('Create Genesis Block');
-        return new Block(0, "01/01/2017", [], "9");
-    }
-
-    getLatestBlock(){
-        console.log('getLatestBlock');
-        return this.chain[this.chain.length - 1];
-    }
-
-    minePendingTransactions(miningRewardAddress) {
-        // mine block
-        let block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
-        block.mineBlock(this.difficulty);
-
-        // chain push
-        console.log('Block successfully mined!');
-        this.chain.push(block);
-
-        // add pending transactions
-        this.pendingTransactions = [
-            new Transaction(null, miningRewardAddress, this.miningReward)
-        ];
-    }
-
-    // create a new transaction in pendingTransactions.
-    createTransaction(transaction) {
-        this.pendingTransactions.push(transaction);
-    }
-
-    getBalanceOfAddress(address) {
-        let balance = 0;
-
-        for (const block of this.chain) {
-            for (const trans of block.transactions) {
-                if (trans.fromAddress === address) {
-                    balance -= trans.amount;
-                }
-
-                if (trans.toAddress === address) {
-                    balance += trans.amount;
-                }
-            }
-        }
-        return balance;
-    }
-
-    addBlock(newBlock){
-        console.log('addBlock', newBlock);
-        newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.mineBlock(this.difficulty);
-        this.chain.push(newBlock);
-    }
-
-    isChainValid() {
-        console.log('isChainValid');
-
-        for(let i = 1; i < this.chain.length; i++) {
-            const currentBlock = this.chain[i];
-            const previousBlock = this.chain[i-1];
-
-            // if any current block hash is not equal to hash of its contents, return invalid.
-            if (
-                currentBlock.hash !== currentBlock.calculateHash() ||
-                currentBlock.previousHash !== previousBlock.hash
-            ) {
-                return false;
-            };
-        }
-        return true;
-    }
-}
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
 
 // Demo 1: Add block
 function testAddBlock() {
@@ -145,18 +32,66 @@ function testMiningBasic() {
     
     xcoin.addBlock(new Block(2, "17/03/2020", { amount: 8 }));
 }
-
 // testMiningBasic();
-let xCoin = new Blockchain();
-xCoin.createTransaction(new Transaction('address1', 'address2', 100));
-xCoin.createTransaction(new Transaction('address2', 'address1', 50));
 
-console.log('\n Starting the miner...');
-xCoin.minePendingTransactions('xaviers-address');
+const Transaction = require('./Transaction');
 
-console.log('\nBalance of xavier is', xCoin.getBalanceOfAddress('xaviers-address'));
+/**
+ * Test that successful mining of a block is rewarded
+ */
+function testMiningBalance() {
+    let xCoin = new Blockchain();
+    xCoin.createTransaction(new Transaction('address1', 'address2', 100));
+    xCoin.createTransaction(new Transaction('address2', 'address1', 50));    
 
-console.log('\n Starting the miner 2nd time...');
-xCoin.minePendingTransactions('xaviers-address');
+    console.log('\n Starting the miner...');
+    xCoin.minePendingTransactions('xaviers-address');
+    
+    console.log('\nBalance of xavier is', xCoin.getBalanceOfAddress('xaviers-address'));
+    
+    console.log('\n Starting the miner 2nd time...');
+    xCoin.minePendingTransactions('xaviers-address');
+    
+    console.log('\nBalance of xavier is', xCoin.getBalanceOfAddress('xaviers-address'));
+    
+}
 
-console.log('\nBalance of xavier is', xCoin.getBalanceOfAddress('xaviers-address'));
+/**
+ * Demo 4 
+ * testSigningTransaction
+ * Test that a transaction can be signed, 
+ * so that unauthorized modification to the transaction is detectable.
+ */
+function testSigningTransaction(shouldTamper) {
+    const myKey = ec.keyFromPrivate('dnsfhai2ibrb2jknjxcvniuwea')
+    const myWalletAddress = myKey.getPublic('hex');
+
+    let xCoin = new Blockchain();
+    
+    // Create a transaction
+    const tx1 = new Transaction(myWalletAddress, 'public key', 10)
+    // Sign the transaction
+    tx1.signTransaction(myKey);
+    // Add transaction to coin's (pendingTransactions)
+    xCoin.addTransaction(tx1);
+
+    // Mine the transaction
+    console.log('\nStarting miner...');
+    xCoin.minePendingTransactions('xaviers-address');
+    console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
+
+    // Start the miner again
+    console.log('\Starting miner again...');
+    xCoin.minePendingTransactions('xaviers-address');
+    console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
+
+    if (shouldTamper) {
+        // do unauthorized modification 
+        xCoin.chain[1].transactions[0].amount = 999999;
+    }
+
+    // Check validity of entire xCoin chain.
+    console.log('Is chain valid?', xCoin.isChainValid());
+}
+
+testSigningTransaction(false);
