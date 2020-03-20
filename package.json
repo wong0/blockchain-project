@@ -4,6 +4,10 @@
     "license": "To Be Determined",
     "description": "Create a blockchain that is transactable, minable.",
     "dependencies": {
-        "crypto-js": "^4.0.0"
+        "crypto-js": "^4.0.0",
+        "elliptic": "^6.5.2",
+        "express": "^4.8.7",
+        "minimist": "^1.2.5",
+        "request": "^2.88.2"
     }
 }
