@@ -2,7 +2,15 @@
 
 Usage:
 
-node <full name of this file> <port number> <neighbor node list>
+node <full name of this file> <port number> <neighbor node list of full http addresses>
+
+start 3 nodes, that are all neighbors of each other
+
+node FullNode.js 8881 http://127.0.0.1:8882,http://127.0.0.1:8883
+node FullNode.js 8882 http://127.0.0.1:8883,http://127.0.0.1:8881
+node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882
+
+
 
  */
 
@@ -10,6 +18,7 @@ var http = require("http");
 
 const request = require('request');
 
+//
 const neighborNodeList = process.argv[3].split(',');
 
 // DEBUG
@@ -18,36 +27,50 @@ const neighborNodeList = process.argv[3].split(',');
 // });
 // console.log(process.argv[3]);
 
-function startup() {
+async function startup() {
     console.log('startup()');
     console.log('Send getBlocks to other nodes');
+
+    // Array for all responses to be stored, 
+    // and processed once all neightborNode list have been pinged.
+    const neighborNodeErrorList = []; 
+    const neighborNodeResponseList = []; 
+    const neighborNodeBodyList = []; 
 
     // Assumption: We know what the other nodes are.
     // send out /version calls
     neighborNodeList.forEach(neighborNode => {
-        request(`${neighborNode}/version`, function (error, response, body) {
+        request(`${neighborNode}/getBlocks`, function (error, response, body) {
             console.error('error:', error); // Print the error if one occurred
             console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
             console.log('body:', body); // Print body
 
-            // IF this node has a longer chain than the others, send version.
-            // ELSE send getBlocks to get blocks. 
-
+            // save response to neighborNodeResponseList
+            neighborNodeErrorList.push(error);
+            neighborNodeResponseList.push(response);
+            neighborNodeBodyList.push(body);
         });
     });
+
+    // IF this node has a longer chain than the others, send inv.
+    // ELSE send getBlocks to get blocks. 
+    
+}
+
+function saveBlockchainToDisk(blockchain) {
+    // TODO save blockchain to disk
+    
+}
+
+
+function saveStateToMemory(state) {
+    // TODO save state to memory
 }
 
 startup();
 
 var express = require('express');
 var app = express();
-
-app.get('/version', function(req, res) {
-    // Handle GET version
-
-    res.send("GET version API!");
-    
-});
 
 app.get('/getBlocks', function(req, res){
     // Handle GET Blocks
@@ -64,7 +87,7 @@ app.get('/getBlocks', function(req, res){
 app.get('/inv', function(req, res){
     // Handle GET inv
 
-    res.send("GET inv API!");
+    res.send(JSON.stringify({}));
 })
 
 app.listen(process.argv[2]);
