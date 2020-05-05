@@ -44,3 +44,11 @@ c) You could refer to some open source projects to implement your databases.
 6. Presentation and demonstration 5
 7. Group report 3
 8. Individual report 2
+
+
+## Get Started
+
+Run `node FullNode.js`
+
+Run `node main.js`
+
