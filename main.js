@@ -53,8 +53,12 @@ function testMiningBalance() {
     xCoin.minePendingTransactions('xaviers-address');
     
     console.log('\nBalance of xavier is', xCoin.getBalanceOfAddress('xaviers-address'));
+
+    console.log('-------')
     
 }
+
+// testMiningBalance()
 
 /**
  * Demo 4 

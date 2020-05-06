@@ -7,11 +7,27 @@ const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
 module.exports = class Transaction {
-    constructor(fromAddress, toAddress, amount) {
+    constructor(fromAddress, toAddress, amount, id, txIns, txOuts) {
+        this.id = id;
+        this.txIns = txIns;
+        this.txOuts = txOuts;
+        
         this.fromAddress = fromAddress;
         this.toAddress = toAddress;
         this.amount = amount;
     }
+
+    getTransactionId (transaction) {
+        const txInContent = transaction.txIns
+            .map((txIn) => txIn.txOutId + txIn.txOutIndex)
+            .reduce((a, b) => a + b, '');
+
+        const txOutContent = transaction.txOuts
+            .map((txOut) => txOut.address + txOut.amount)
+            .reduce((a, b) => a + b, '');
+        
+        return CryptoJS.SHA256(txInContent + txOutContent).toString();
+    };
 
     /**
      * Calc hash of Transaction, using fromAddress, toAddress, amount
@@ -25,6 +41,8 @@ module.exports = class Transaction {
      * @param {} signingKey 
      */
     signTransaction(signingKey) {
+        console.log(`${signingKey.getPublic('hex')}    ${this.fromAddress}`)
+
         if (signingKey.getPublic('hex') !== this.fromAddress) {
             throw new Error('You cannot sign transactions for other wallets!');
         }
@@ -32,6 +50,7 @@ module.exports = class Transaction {
         const hashTx = this.calculateHash();
         const sig = signingKey.sign(hashTx, 'base64');
         this.signature = sig.toDER('hex');
+
     }
 
     /**
