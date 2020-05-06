@@ -15,6 +15,9 @@ module.exports = class Transaction {
         this.fromAddress = fromAddress;
         this.toAddress = toAddress;
         this.amount = amount;
+
+        // transaction is signed sometime later.
+        this.signature = null; 
     }
 
     getTransactionId (transaction) {
