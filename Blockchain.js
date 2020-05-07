@@ -33,7 +33,7 @@ module.exports = class Blockchain{
 
         // chain push
         console.log('Block successfully mined!');
-        this.chain.push(block);
+        this.addBlock(block);
 
         // add pending transactions
         this.pendingTransactions = [
@@ -68,7 +68,7 @@ module.exports = class Blockchain{
     addBlock(newBlock){
         newBlock.previousHash = this.getLatestBlock().hash;
         newBlock.mineBlock(this.difficulty);
-        newBlock.height = this.getLatestBlock().height;
+        newBlock.height = this.getLatestBlock().height ? this.getLatestBlock().height++ : 0;
 
         console.log(
             'addBlock:\n',
