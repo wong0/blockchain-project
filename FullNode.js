@@ -11,16 +11,41 @@ node FullNode.js 8882 http://127.0.0.1:8883,http://127.0.0.1:8881 dnsfhai2ibrb2j
 node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2jknjxcvniuwec
 
  */
+
+//
+// Dependencies
+//
+
+// Blockchain dependencies
 const Block = require('./Block');
 const Blockchain = require('./Blockchain');
 const Transaction = require("./Transaction");
-
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
-var http = require("http");
+// Storage dependencies - Redis
+var redis = require('redis');
+var client = redis.createClient();
 
+// Storage Redis client init
+client.on('connect', function() {
+    console.log('Redis is connected!\n');
+});
+
+// Redis Storage Test - Key-value pair
+// client.save(['key', 'value']); 
+
+// Storage dependencies - Mongo 
+
+
+
+// Networking dependencies
+var http = require("http");
 const request = require('request');
+
+//
+// Get Args
+//
 
 // Get NeighborNodeList arg
 const neighborNodeList = process.argv[3].split(',');
@@ -33,6 +58,10 @@ const myKey = ec.keyFromPrivate(privateKey)
 
 // Create Wallet address
 const myWalletAddress = myKey.getPublic('hex');
+
+//
+// Initialization of Blockchain
+//
 
 // Initialize Singleton Blockchain instance
 const xCoin = initializeBlockchain();
@@ -94,7 +123,7 @@ function saveBlockchainToDisk(blockchain) {
 
 function saveStateToMemory(state) {
     // TODO save state to memory
-    
+
 }
 
 
