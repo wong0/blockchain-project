@@ -62,9 +62,16 @@ module.exports = class Blockchain{
     }
 
     addBlock(newBlock){
-        console.log('addBlock', newBlock);
         newBlock.previousHash = this.getLatestBlock().hash;
         newBlock.mineBlock(this.difficulty);
+        newBlock.height = this.getLatestBlock().height;
+
+        console.log(
+            'addBlock:\n',
+            'newBlock: ', newBlock, 
+            '\nthis.difficulty', this.difficulty,
+        );
+
         this.chain.push(newBlock);
     }
 

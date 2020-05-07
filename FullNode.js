@@ -13,13 +13,21 @@ node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882
 
 
  */
+const Block = require('./Block');
+const Blockchain = require('./Blockchain');
+
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
 
 var http = require("http");
 
 const request = require('request');
 
-//
+// Get NeighborNodeList
 const neighborNodeList = process.argv[3].split(',');
+
+// Get PrivateKey
+const privateKey = process.argv[4];
 
 // DEBUG
 // process.argv.forEach((val, index) => {
@@ -27,9 +35,28 @@ const neighborNodeList = process.argv[3].split(',');
 // });
 // console.log(process.argv[3]);
 
+function createWallet() {
+    console.log('createWallet()');
+
+    // Create key     // ec.keyFromPrivate('dnsfhai2ibrb2jknjxcvniuwea')
+    const myKey = ec.keyFromPrivate(privateKey)
+
+    // Create Wallet address
+    const myWalletAddress = myKey.getPublic('hex');
+
+    let xCoin = new Blockchain();
+
+    // Create coinbase transaction from coinbase to me
+    // TODO
+
+}
+
 async function startup() {
-    console.log('startup()');
-    console.log('Send getBlocks to other nodes');
+    // console.log('startup()');
+
+    createWallet();
+
+    console.log('Send getBlocks to other nodes...');
 
     // Array for all responses to be stored, 
     // and processed once all neightborNode list have been pinged.
@@ -67,7 +94,6 @@ function saveStateToMemory(state) {
     // TODO save state to memory
 }
 
-startup();
 
 var express = require('express');
 var app = express();
@@ -92,5 +118,10 @@ app.get('/inv', function(req, res){
 
 app.listen(process.argv[2]);
 
+
+startup();
+
 // Console will print the message
 console.log(`Server running at http://127.0.0.1:${process.argv[2]}/`);
+
+

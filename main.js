@@ -41,7 +41,11 @@ const Transaction = require('./Transaction');
  */
 function testMiningBalance() {
     let xCoin = new Blockchain();
+
+    // Create a transaction from address 1 to 2 of 100
     xCoin.createTransaction(new Transaction('address1', 'address2', 100));
+
+    // Create transaction from address 2 to 1 of 50
     xCoin.createTransaction(new Transaction('address2', 'address1', 50));    
 
     console.log('\n Starting the miner...');
@@ -67,9 +71,13 @@ function testMiningBalance() {
  * so that unauthorized modification to the transaction is detectable.
  */
 function testSigningTransaction(shouldTamper) {
+    // Create key
     const myKey = ec.keyFromPrivate('dnsfhai2ibrb2jknjxcvniuwea')
+    
+    // Create Wallet address
     const myWalletAddress = myKey.getPublic('hex');
 
+    // Initialize Blockchain
     let xCoin = new Blockchain();
     
     // Create a transaction
