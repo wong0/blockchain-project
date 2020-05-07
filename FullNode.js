@@ -36,7 +36,21 @@ client.on('connect', function() {
 // client.save(['key', 'value']); 
 
 // Storage dependencies - Mongo 
+var mongo = require('mongodb');
+var MongoClient = require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/mydb";
 
+MongoClient.connect(url, function(err, db) {
+  if (err) throw err;
+
+  var dbo = db.db("mydb");
+  console.log("MongoDB Database created!\n");
+  dbo.createCollection("blocks", function(err, res) {
+    if (err) throw err;
+    console.log("Collection created!");
+    db.close();
+  });
+});
 
 
 // Networking dependencies

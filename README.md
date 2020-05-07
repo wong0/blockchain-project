@@ -48,6 +48,26 @@ c) You could refer to some open source projects to implement your databases.
 
 ## Get Started
 
+### Install Mongo DB
+https://docs.mongodb.com/manual/administration/install-community/
+On Mac:
+$ brew tap mongodb/brew
+$ brew install mongodb-community@4.2
+
+### Start Mongo DB
+$ brew services start mongodb-community@4.2
+It should say:
+==> Successfully started `mongodb-community` (label: homebrew.mxcl.m
+
+### Install Redis
+https://redis.io/topics/quickstart
+
+### Start Redis
+Start Redis, by running `redis server`. 
+To verify Redis is working, run `redis-cli ping`.
+
+### Run this Application
+
 Run `node FullNode.js`
 
 Run `node main.js`
