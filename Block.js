@@ -5,12 +5,13 @@ const SHA256 = require('crypto-js/sha256');
  * A Block contains Transactions, previousHash, timestamp
  */
 module.exports = class Block {
-    constructor(timestamp, transactions, previousHash = ''){
+    constructor(timestamp, transactions, previousHash = '', height){
         this.timestamp = timestamp;
         this.transactions = transactions;
         this.previousHash = previousHash;
         this.hash = '';
         this.nonce = 0;
+        this.height = height;
     }
 
     /**
