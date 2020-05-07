@@ -8,6 +8,8 @@ module.exports = class Blockchain{
         this.chain = [this.createGenesisBlock()];
         this.difficulty = 1;
         this.pendingTransactions = [];
+
+        // Mining Reward, AKA value of coinbase transaction
         this.miningReward = 100;
     }
 
@@ -37,6 +39,8 @@ module.exports = class Blockchain{
         this.pendingTransactions = [
             new Transaction(null, miningRewardAddress, this.miningReward)
         ];
+
+        return block;
     }
 
     // create a new transaction in pendingTransactions.

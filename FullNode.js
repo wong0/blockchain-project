@@ -2,19 +2,18 @@
 
 Usage:
 
-node <full name of this file> <port number> <neighbor node list of full http addresses>
+node <full name of this file> <port number> <neighbor node list of full http addresses> <Private Key>
 
 start 3 nodes, that are all neighbors of each other
 
-node FullNode.js 8881 http://127.0.0.1:8882,http://127.0.0.1:8883
-node FullNode.js 8882 http://127.0.0.1:8883,http://127.0.0.1:8881
-node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882
-
-
+node FullNode.js 8881 http://127.0.0.1:8882,http://127.0.0.1:8883 dnsfhai2ibrb2jknjxcvniuwea
+node FullNode.js 8882 http://127.0.0.1:8883,http://127.0.0.1:8881 dnsfhai2ibrb2jknjxcvniuweb
+node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2jknjxcvniuwec
 
  */
 const Block = require('./Block');
 const Blockchain = require('./Blockchain');
+const Transaction = require("./Transaction");
 
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
@@ -23,11 +22,20 @@ var http = require("http");
 
 const request = require('request');
 
-// Get NeighborNodeList
+// Get NeighborNodeList arg
 const neighborNodeList = process.argv[3].split(',');
 
-// Get PrivateKey
+// Get PrivateKey arg
 const privateKey = process.argv[4];
+
+// Create key
+const myKey = ec.keyFromPrivate(privateKey)
+
+// Create Wallet address
+const myWalletAddress = myKey.getPublic('hex');
+
+// Initialize Singleton Blockchain instance
+const xCoin = initializeBlockchain();
 
 // DEBUG
 // process.argv.forEach((val, index) => {
@@ -35,26 +43,20 @@ const privateKey = process.argv[4];
 // });
 // console.log(process.argv[3]);
 
-function createWallet() {
-    console.log('createWallet()');
+function initializeBlockchain() {
+    return new Blockchain();
+}
 
-    // Create key     // ec.keyFromPrivate('dnsfhai2ibrb2jknjxcvniuwea')
-    const myKey = ec.keyFromPrivate(privateKey)
-
-    // Create Wallet address
-    const myWalletAddress = myKey.getPublic('hex');
-
-    let xCoin = new Blockchain();
-
+function triggerMineBlock() {
     // Create coinbase transaction from coinbase to me
-    // TODO
+    xCoin.createTransaction(new Transaction(null, null, 100))
 
+    // Add mining pending transactions
+    xCoin.minePendingTransactions(myWalletAddress);
 }
 
 async function startup() {
     // console.log('startup()');
-
-    createWallet();
 
     console.log('Send getBlocks to other nodes...');
 
@@ -92,6 +94,7 @@ function saveBlockchainToDisk(blockchain) {
 
 function saveStateToMemory(state) {
     // TODO save state to memory
+    
 }
 
 
@@ -114,10 +117,20 @@ app.get('/inv', function(req, res){
     // Handle GET inv
 
     res.send(JSON.stringify({}));
-})
+});
+
+app.get('/triggerMineBlock', function(req, res) {
+    // Handle GET triggerMineBlock
+
+    triggerMineBlock();
+
+    res.send(JSON.stringify({
+        success: true,
+        msg: 'Block successfully mined!',
+    }))
+});
 
 app.listen(process.argv[2]);
-
 
 startup();
 
