@@ -8,6 +8,7 @@
         "elliptic": "^6.5.2",
         "express": "^4.8.7",
         "minimist": "^1.2.5",
+        "redis": "^3.0.2",
         "request": "^2.88.2"
     }
 }
