@@ -68,7 +68,7 @@ module.exports = class Blockchain{
     addBlock(newBlock){
         newBlock.previousHash = this.getLatestBlock().hash;
         newBlock.mineBlock(this.difficulty);
-        newBlock.height = this.getLatestBlock().height ? this.getLatestBlock().height++ : 0;
+        newBlock.height = (this.getLatestBlock().height ? this.getLatestBlock().height : 0) + 1;
 
         console.log(
             'addBlock:\n',
