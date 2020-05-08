@@ -37,7 +37,7 @@ module.exports = class Block {
      * Validates all transactions of this Block
      */
     hasValidTransactions() {
-        console.log('hasValidTransactions: this.transactions: ', this.transactions);
+        // console.log('hasValidTransactions: this.transactions: ', this.transactions);
         for (const tx of this.transactions) {
             if (!tx.isValid()) {
                 return false;
