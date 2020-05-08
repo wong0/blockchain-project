@@ -40,16 +40,69 @@ var mongo = require('mongodb');
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/mydb";
 
-MongoClient.connect(url, function(err, db) {
-  if (err) throw err;
+const dbName = "blockchain-coin-db";
+const dbCollectionName = "blockchain";
 
-  var dbo = db.db("mydb");
-  console.log("MongoDB Database created!\n");
-  dbo.createCollection("blocks", function(err, res) {
+MongoClient.connect(url, function(err, db) {
     if (err) throw err;
-    console.log("Collection created!");
-    db.close();
-  });
+    var dbo = db.db(dbName);
+    console.log("MongoDB Database created/initialized!\n");
+
+    // // Test Create Collection
+    // dbo.createCollection(dbCollectionName, function(err, res) {
+    //     if (err) throw err;
+    //     console.log("Collection 'blocks' created!");
+    //     db.close();
+    // });
+
+//   // input a sample block
+//   var sampleBlock = {
+//     timestamp: 1588869890691,
+//     transactions: [ [Object] ],
+//     previousHash: '07a6861b81748204f9205353e498c885020ed3290967a759aaa385ca27fd5e1c',
+//     hash: '0169cd33b6b487a27648d14d6e2db3852bb842a3d004d946b705a1a3526892c2',
+//     nonce: 22,
+//     height: 0 
+//   };
+
+//   dbo.collection(dbCollectionName).insertOne(sampleBlock, function(err, res) {
+//     if (err) throw err;
+//     console.log("1 document sampleBlock inserted");
+//     db.close();
+//   });
+
+    var query = {};
+    dbo.collection(dbCollectionName).find(query).toArray(function(err, result) {
+        if (err) throw err;
+        console.log('test query result', result);
+
+        let xCoin = new Blockchain();
+
+        // Restore queried blocks to current blockchain
+        result.forEach(item => {
+            console.log('item', item);
+
+            const block = new Block(
+                item.timestamp,
+                item.transactions,
+                item.previousHash
+            );
+
+            block.hash = item.hash;
+            block.nonce = item.nonce;
+            block.height = item.height;
+
+            xCoin.chain.push(block);
+        });
+
+        // After restoring queried blocks, print it out. 
+        console.log(
+            '\nRetrieved xCoin.chain: \n', 
+            xCoin.chain
+        );
+
+        db.close();
+    });
 });
 
 
@@ -96,6 +149,8 @@ function triggerMineBlock() {
 
     // Add mining pending transactions
     xCoin.minePendingTransactions(myWalletAddress);
+
+    console.log('\nMy Wallet Balance: ', xCoin.getBalanceOfAddress(myWalletAddress));
 }
 
 async function startup() {
@@ -124,22 +179,40 @@ async function startup() {
         });
     });
 
+    // Test
+    const neighborNodeErrorList = [
+        {
+            
+        }
+    ]; 
+    const neighborNodeResponseList = [
+        {
+
+        }
+    ]; 
+    const neighborNodeBodyList = [
+        {
+
+        }
+    ];
+
     // IF this node has a longer chain than the others, send inv.
-    // ELSE send getBlocks to get blocks. 
-    
-}
-
-function saveBlockchainToDisk(blockchain) {
-    // TODO save blockchain to disk
-    
-}
-
-
-function saveStateToMemory(state) {
-    // TODO save state to memory
+    // ELSE adopt longest chain received from getBlocks.
+    if (xCoin.chain.length > neighborNodeBodyList) {
+        // send Inv
+    } else {
+        // adopt longest chain
+    }
 
 }
 
+function sendInvToNeighbors(myBlockchain) {
+    neighborNodeList.forEach(neighborNode => {
+        request.post('sendInv', {
+            // todo convert blockchain to sendable
+        })
+    })
+}
 
 var express = require('express');
 var app = express();
@@ -147,7 +220,7 @@ var app = express();
 app.get('/getBlocks', function(req, res){
     // Handle GET Blocks
 
-    res.send("GET Blocks API!");
+    res.send(JSON.stringify(xCoin.chain));
     // Exchange inventory
 
     // This is done to reduce network load, 
@@ -159,7 +232,11 @@ app.get('/getBlocks', function(req, res){
 app.get('/inv', function(req, res){
     // Handle GET inv
 
-    res.send(JSON.stringify({}));
+    // TODO take in blocks received.
+    // If longer than mine, use theirs
+    console.log('/inv req', req)
+    console.log('/inv res', res)
+    
 });
 
 app.get('/triggerMineBlock', function(req, res) {
@@ -171,6 +248,19 @@ app.get('/triggerMineBlock', function(req, res) {
         success: true,
         msg: 'Block successfully mined!',
     }))
+});
+
+
+// TODO: POST transaction
+app.post('/transaction', function(req, res) {
+    // Handle POST transaction
+    console.log('req', req);
+
+    // put it in a pool of pending transactions.
+
+    // create a block to put this transaction
+
+    // trigger mining.
 });
 
 app.listen(process.argv[2]);
