@@ -82,6 +82,7 @@ function testSigningTransaction(shouldTamper) {
     
     // Create a transaction
     const tx1 = new Transaction(myWalletAddress, 'public key', 10)
+
     // Sign the transaction
     tx1.signTransaction(myKey);
     // Add transaction to coin's (pendingTransactions)
@@ -103,10 +104,27 @@ function testSigningTransaction(shouldTamper) {
     }
 
     console.log('Balance of myWalletAddress : ', xCoin.getBalanceOfAddress(myWalletAddress), '');
-
     console.log('Balance of "public key" Address : ', xCoin.getBalanceOfAddress('public key'), '');
+    console.log('Printout of xCoin whole blockchain : ', xCoin.chain);
 
-    console.log('Printout of xCoin whole blockchain : ', xCoin.chain)
+    console.log('\n--------------------------\nAdd another transaction...\n');
+
+    // Create a transaction
+    const tx2 = new Transaction(myWalletAddress, 'public key', 20);
+
+    // Sign the tx2 transaction
+    tx2.signTransaction(myKey);
+    // Add transaction to coin's (pendingTransactions)
+    xCoin.addTransaction(tx2);
+
+    // Mine the tx2 transaction
+    console.log('\nStarting miner...');
+    xCoin.minePendingTransactions('xaviers-address');
+    console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
+    
+    console.log('Balance of myWalletAddress : ', xCoin.getBalanceOfAddress(myWalletAddress), '');
+    console.log('Balance of "public key" Address : ', xCoin.getBalanceOfAddress('public key'), '');
+    console.log('Printout of xCoin whole blockchain : ', xCoin.chain);
 
     // Check validity of entire xCoin chain.
     console.log('Is chain valid?', xCoin.isChainValid());
