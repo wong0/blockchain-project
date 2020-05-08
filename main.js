@@ -102,6 +102,12 @@ function testSigningTransaction(shouldTamper) {
         xCoin.chain[1].transactions[0].amount = 999999;
     }
 
+    console.log('Balance of myWalletAddress : ', xCoin.getBalanceOfAddress(myWalletAddress), '');
+
+    console.log('Balance of "public key" Address : ', xCoin.getBalanceOfAddress('public key'), '');
+
+    console.log('Printout of xCoin whole blockchain : ', xCoin.chain)
+
     // Check validity of entire xCoin chain.
     console.log('Is chain valid?', xCoin.isChainValid());
 }
