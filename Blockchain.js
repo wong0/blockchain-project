@@ -17,12 +17,12 @@ module.exports = class Blockchain{
      * The first block of the blockchain
      */
     createGenesisBlock(){
-        console.log('Create Genesis Block');
+        console.log('Create Genesis Block\n');
         return new Block(0, "01/01/2017", [], "9");
     }
 
     getLatestBlock(){
-        console.log('getLatestBlock');
+        // console.log('getLatestBlock');
         return this.chain[this.chain.length - 1];
     }
 
@@ -32,7 +32,7 @@ module.exports = class Blockchain{
         block.mineBlock(this.difficulty);
 
         // chain push
-        console.log('Block successfully mined!');
+        console.log('Block successfully mined!\n');
         this.addBlock(block);
 
         // add pending transactions
