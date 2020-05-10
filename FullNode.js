@@ -105,10 +105,12 @@ MongoClient.connect(url, function(err, db) {
     });
 });
 
-
 // Networking dependencies
 var http = require("http");
 const request = require('request');
+
+// API dependencies
+const InvSender = require('./InvSender');
 
 //
 // Get Args
@@ -179,43 +181,52 @@ async function startup() {
         });
     });
 
+    // Find Longest chain.
+    neighborNodeResponseList.forEach(response => {
+        // TODO
+    })
+
     // Test
-    const neighborNodeErrorList = [
+    const testNeighborNodeErrorList = [
         {
             
         }
     ]; 
-    const neighborNodeResponseList = [
+    const testNeighborNodeResponseList = [
         {
 
         }
     ]; 
-    const neighborNodeBodyList = [
+    const testNeighborNodeBodyList = [
         {
 
         }
     ];
 
+    neighborNodeBodyList = testNeighborNodeBodyList;
+
     // IF this node has a longer chain than the others, send inv.
     // ELSE adopt longest chain received from getBlocks.
-    if (xCoin.chain.length > neighborNodeBodyList) {
+    if (xCoin.chain.length > maxNeighborNodeBodyListLength) {
         // send Inv
+        const invSender = new InvSender();
+        invSender.sendInvToNeighbors();
     } else {
         // adopt longest chain
+
     }
 
 }
 
-function sendInvToNeighbors(myBlockchain) {
-    neighborNodeList.forEach(neighborNode => {
-        request.post('sendInv', {
-            // todo convert blockchain to sendable
-        })
-    })
-}
 
 var express = require('express');
+var bodyParser = require("body-parser");
+
 var app = express();
+
+//Here we are configuring express to use body-parser as middle-ware.
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.get('/getBlocks', function(req, res){
     // Handle GET Blocks
@@ -229,13 +240,15 @@ app.get('/getBlocks', function(req, res){
 
 });
 
-app.get('/inv', function(req, res){
+app.post('/inv', function(req, res){
     // Handle GET inv
 
     // TODO take in blocks received.
     // If longer than mine, use theirs
-    console.log('/inv req', req)
-    console.log('/inv res', res)
+
+    console.log('/inv req.body', req.body);
+    // console.log('/inv res', res);
+    
     
 });
 
@@ -256,11 +269,13 @@ app.post('/transaction', function(req, res) {
     // Handle POST transaction
     console.log('req', req);
 
-    // put it in a pool of pending transactions.
+    // parse into a transaction
 
-    // create a block to put this transaction
+    // put it in a pool of pendingTransactions.
+    // xCoin.createTransaction(transaction)
 
-    // trigger mining.
+    // create a block to put this transaction, trigger mining.
+    // xCoin.minePendingTransactions
 });
 
 app.listen(process.argv[2]);
