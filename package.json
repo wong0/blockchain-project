@@ -4,6 +4,7 @@
     "license": "To Be Determined",
     "description": "Create a blockchain that is transactable, minable.",
     "dependencies": {
+        "body-parser": "^1.19.0",
         "crypto-js": "^4.0.0",
         "elliptic": "^6.5.2",
         "express": "^4.8.7",
