@@ -15,29 +15,61 @@ module.exports = class Block {
     }
 
     /**
-     * Hash of index, previousHash, timestamp, data.
+     * Hash of index, previousHash, timestamp, transactions, Nonce.
      */
-    calculateHash(){
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    calculateHash(index, previousHash, timestamp, transactions, nonce){
+        return SHA256(index + previousHash + timestamp + JSON.stringify(transactions) + nonce).toString();
+    }
+
+    hexToBinary(hex) {
+        return (parseInt(hex, 16).toString(2)).padStart(8, '0');
+    }
+
+    hashMatchesDifficulty(hash, difficulty) {
+        // const hashInBinary = this.hexToBinary(hash);
+        const requiredPrefix = '0'.repeat(difficulty);
+
+        console.log(
+            `hashMatchesDifficulty: hash:`, hash, 
+            // ', hashInBinary: ', hashInBinary, 
+            ' difficulty: ', difficulty, 
+            '\n'
+        );
+
+        // return hashInBinary.startsWith(requiredPrefix);
+        return hash.startsWith(requiredPrefix);
     }
 
     /**
-     * Mine Block
-     * @param {*} difficulty 
+     * mineBlock
+     * @param {number} index 
+     * @param {string} previousHash 
+     * @param {number} timestamp 
+     * @param {array} transactions 
+     * @param {number} difficulty 
      */
-    mineBlock(difficulty){
-        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")){
-            this.nonce++;
-            this.hash = this.calculateHash();
+    mineBlock(difficulty) {
+        let nonce = 0;
+        while (true) {
+            const hash = this.calculateHash(this.index, this.previousHash, this.timestamp, this.transactions, nonce);
+            if (this.hashMatchesDifficulty(hash, difficulty)) {
+                this.difficulty = difficulty;
+                this.nonce = nonce;
+                this.hash = hash;
+
+                console.log("findBlock: Block mined:" + this.hash);
+
+                return this;
+            }
+            nonce++;
         }
-        console.log("Block mined:" + this.hash);
     }
 
     /**
      * Validates all transactions of this Block
      */
     hasValidTransactions() {
-        // console.log('hasValidTransactions: this.transactions: ', this.transactions);
+        console.log('hasValidTransactions: this.transactions: ', this.transactions);
         for (const tx of this.transactions) {
             if (!tx.isValid()) {
                 return false;
@@ -54,7 +86,6 @@ module.exports = class Block {
      * - PreviousHash of block match hash of previous block
      * - Hash of block itself must be valid
      * 
-     * Is Valid New Block
      */
     isValidNewBlock(newBlock, previousBlock) {
         if (previousBlock.index + 1 !== newBlock.index) return false
