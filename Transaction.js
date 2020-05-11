@@ -6,6 +6,8 @@ const Blockchain = require('./Blockchain');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
+const COINBASE_AMOUNT = 50;
+
 module.exports = class Transaction {
     constructor(fromAddress, toAddress, amount, id, txIns, txOuts) {
         this.id = id;
@@ -20,7 +22,13 @@ module.exports = class Transaction {
         this.signature = null; 
     }
 
-    getTransactionId (transaction) {
+    /**
+     * calculated by taking a hash from the contents of the transaction.
+     * However, the signatures of the txIds are not included in the transaction hash as the will be
+     * added later on to the transaction.
+     * @param {*} transaction 
+     */
+    getTransactionId (transaction, isCoinbaseTransaction = false, blockHeight = '') {
         const txInContent = transaction.txIns
             .map((txIn) => txIn.txOutId + txIn.txOutIndex)
             .reduce((a, b) => a + b, '');
@@ -28,8 +36,12 @@ module.exports = class Transaction {
         const txOutContent = transaction.txOuts
             .map((txOut) => txOut.address + txOut.amount)
             .reduce((a, b) => a + b, '');
+
+        const hashContent = txInContent + 
+            txOutContent + 
+            (isCoinbaseTransaction ? blockHeight : '');
         
-        return CryptoJS.SHA256(txInContent + txOutContent).toString();
+        return CryptoJS.SHA256(hashContent).toString();
     };
 
     /**
@@ -79,7 +91,7 @@ module.exports = class Transaction {
         const result = publicKey.verify(this.calculateHash(), this.signature);
         
         console.log(
-            '\npublicKey ', publicKey,
+            // '\npublicKey ', publicKey,
             '\nisValid result ', result
         );
 
