@@ -68,7 +68,15 @@ To verify Redis is working, run `redis-cli ping`.
 
 ### Run this Application
 
-Run `node FullNode.js`
+Run `node FullNode.js <port number> <neighbor node list of full http addresses> <Private Key>`
+
+Usage:
+
+Start 3 nodes, that are all neighbors of each other:
+'''
+node FullNode.js 8881 http://127.0.0.1:8882,http://127.0.0.1:8883 dnsfhai2ibrb2jknjxcvniuwea
+node FullNode.js 8882 http://127.0.0.1:8883,http://127.0.0.1:8881 dnsfhai2ibrb2jknjxcvniuweb
+node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2jknjxcvniuwec
+'''
 
 Run `node main.js`
-
