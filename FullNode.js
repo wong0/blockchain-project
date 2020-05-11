@@ -16,11 +16,19 @@ node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2j
 // Dependencies
 //
 
+// Networking dependencies
+var http = require("http");
+var request = require('request');
+
+// Express dependencies
+var express = require('express');
+var bodyParser = require("body-parser");
+
 // Blockchain dependencies
-const Block = require('./Block');
-const Blockchain = require('./Blockchain');
-const Transaction = require("./Transaction");
-const EC = require('elliptic').ec;
+var Block = require('./Block');
+var Blockchain = require('./Blockchain');
+var Transaction = require("./Transaction");
+var EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
 // Storage dependencies - Redis
@@ -43,6 +51,13 @@ var url = "mongodb://localhost:27017/mydb";
 const dbName = "blockchain-coin-db";
 const dbCollectionName = "blockchain";
 
+//
+// Initialization of Blockchain
+//
+
+// Initialize Singleton Blockchain instance
+const xCoin = initializeBlockchain();
+
 MongoClient.connect(url, function(err, db) {
     if (err) throw err;
     var dbo = db.db(dbName);
@@ -54,7 +69,6 @@ MongoClient.connect(url, function(err, db) {
     //     console.log("Collection 'blocks' created!");
     //     db.close();
     // });
-
 //   // input a sample block
 //   var sampleBlock = {
 //     timestamp: 1588869890691,
@@ -64,7 +78,6 @@ MongoClient.connect(url, function(err, db) {
 //     nonce: 22,
 //     height: 0 
 //   };
-
 //   dbo.collection(dbCollectionName).insertOne(sampleBlock, function(err, res) {
 //     if (err) throw err;
 //     console.log("1 document sampleBlock inserted");
@@ -74,13 +87,11 @@ MongoClient.connect(url, function(err, db) {
     var query = {};
     dbo.collection(dbCollectionName).find(query).toArray(function(err, result) {
         if (err) throw err;
-        console.log('test query result', result);
-
-        let xCoin = new Blockchain();
+        console.log('test query result', result, '\n');
 
         // Restore queried blocks to current blockchain
         result.forEach(item => {
-            console.log('item', item);
+            console.log('Restore queried blocks to current blockchain: ', item, '\n');
 
             const block = new Block(
                 item.timestamp,
@@ -96,21 +107,17 @@ MongoClient.connect(url, function(err, db) {
         });
 
         // After restoring queried blocks, print it out. 
-        console.log(
-            '\nRetrieved xCoin.chain: \n', 
-            xCoin.chain
-        );
+        // console.log(
+        //     '\nRetrieved xCoin.chain: \n', 
+        //     xCoin.chain
+        // );
 
         db.close();
     });
 });
 
-// Networking dependencies
-var http = require("http");
-const request = require('request');
-
 // API dependencies
-const InvSender = require('./InvSender');
+var InvSender = require('./InvSender');
 
 //
 // Get Args
@@ -128,12 +135,6 @@ const myKey = ec.keyFromPrivate(privateKey)
 // Create Wallet address
 const myWalletAddress = myKey.getPublic('hex');
 
-//
-// Initialization of Blockchain
-//
-
-// Initialize Singleton Blockchain instance
-const xCoin = initializeBlockchain();
 
 // DEBUG
 // process.argv.forEach((val, index) => {
@@ -152,13 +153,13 @@ function triggerMineBlock() {
     // Add mining pending transactions
     xCoin.minePendingTransactions(myWalletAddress);
 
-    console.log('\nMy Wallet Balance: ', xCoin.getBalanceOfAddress(myWalletAddress));
+    // console.log('\nMy Wallet Balance: ', xCoin.getBalanceOfAddress(myWalletAddress));
 }
 
 async function startup() {
     // console.log('startup()');
 
-    console.log('Send getBlocks to other nodes...');
+    console.log('Send getBlocks to other nodes...\n');
 
     // Array for all responses to be stored, 
     // and processed once all neightborNode list have been pinged.
@@ -166,64 +167,46 @@ async function startup() {
     const neighborNodeResponseList = []; 
     const neighborNodeBodyList = []; 
 
+    console.log('neighborNodeList', neighborNodeList);
+
     // Assumption: We know what the other nodes are.
     // send out /version calls
     neighborNodeList.forEach(neighborNode => {
-        request(`${neighborNode}/getBlocks`, function (error, response, body) {
-            console.error('error:', error); // Print the error if one occurred
-            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-            console.log('body:', body); // Print body
+        request(`${neighborNode}/getBlocks`, function (response, request, body) {
+            // console.error('error:', error); // Print the error if one occurred
+            // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+            console.log(`${neighborNode}/getBlocks: body:`, body , '\n'); // Print body
 
             // save response to neighborNodeResponseList
-            neighborNodeErrorList.push(error);
-            neighborNodeResponseList.push(response);
-            neighborNodeBodyList.push(body);
+            // neighborNodeErrorList.push(error);
+            neighborNodeResponseList.push(body);
+            // neighborNodeBodyList.push(body);
         });
     });
 
     // Find Longest chain.
+    const maxNeighborNodeBodyList = null;
     neighborNodeResponseList.forEach(response => {
-        // TODO
+        if (response.length > maxNeighborNodeBodyList.length) {
+            maxNeighborNodeBodyList = response
+        }
     })
 
-    // Test
-    const testNeighborNodeErrorList = [
-        {
-            
-        }
-    ]; 
-    const testNeighborNodeResponseList = [
-        {
-
-        }
-    ]; 
-    const testNeighborNodeBodyList = [
-        {
-
-        }
-    ];
-
-    neighborNodeBodyList = testNeighborNodeBodyList;
+    neighborNodeBodyList = neighborNodeBodyList;
 
     // IF this node has a longer chain than the others, send inv.
     // ELSE adopt longest chain received from getBlocks.
-    if (xCoin.chain.length > maxNeighborNodeBodyListLength) {
+    if (xCoin.chain.length > maxNeighborNodeBodyList.length) {
         // send Inv
         const invSender = new InvSender();
         invSender.sendInvToNeighbors();
     } else {
-        // adopt longest chain
-
+        // Adopt longest chain
+        xCoin.chain = maxNeighborNodeBodyList;
     }
-
 }
 
-
-var express = require('express');
-var bodyParser = require("body-parser");
-
 var app = express();
-
 //Here we are configuring express to use body-parser as middle-ware.
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -231,13 +214,8 @@ app.use(bodyParser.json());
 app.get('/getBlocks', function(req, res){
     // Handle GET Blocks
 
+    // Send my inventory
     res.send(JSON.stringify(xCoin.chain));
-    // Exchange inventory
-
-    // This is done to reduce network load, 
-    // because blocks can be downloaded from different nodes, 
-    // and we don’t want to download dozens of gigabytes from one node.
-
 });
 
 app.post('/inv', function(req, res){
@@ -246,10 +224,8 @@ app.post('/inv', function(req, res){
     // TODO take in blocks received.
     // If longer than mine, use theirs
 
-    console.log('/inv req.body', req.body);
+    console.log('/inv req.body', req.body, '\n');
     // console.log('/inv res', res);
-    
-    
 });
 
 app.get('/triggerMineBlock', function(req, res) {
@@ -263,19 +239,31 @@ app.get('/triggerMineBlock', function(req, res) {
     }))
 });
 
+var BlockchainSaver = require('./BlockchainSaver');
 
-// TODO: POST transaction
 app.post('/transaction', function(req, res) {
-    // Handle POST transaction
-    console.log('req', req);
+    // Handle POST transaction received
+    console.log('/transaction req.body', req.body, '\n');
 
     // parse into a transaction
+    res.send(JSON.stringify(req.body));
 
+    // ASSUMPTION: req.body is a correct transaction.
+    
     // put it in a pool of pendingTransactions.
-    // xCoin.createTransaction(transaction)
+    xCoin.createTransaction(req.body)
 
-    // create a block to put this transaction, trigger mining.
-    // xCoin.minePendingTransactions
+    // create a block to put this transaction, trigger mining, return mined newBlock
+    const newBlock = xCoin.minePendingTransactions(myWalletAddress);
+
+    // send '/inv' to broadcast new blockchain
+    const invSender = new InvSender();
+    invSender.sendInvToNeighbors(xCoin.chain, neighborNodeList); 
+
+    // Update my chain in DB
+    const blockchainSaver = new BlockchainSaver();
+    blockchainSaver.saveBlockchainToDisk(xCoin.chain);
+
 });
 
 app.listen(process.argv[2]);
