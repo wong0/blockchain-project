@@ -56,15 +56,16 @@ module.exports = class Transaction {
     }
 
     /**
-     * isValid()
+     * is Valid
      */
     isValid() {
-        // console.log(
-        //     '\nisValid() ',
-        //     '\nfromAddress', this.fromAddress, 
-        //     '\nthis.signature', this.signature, 
-        //     '\nthis.calculateHash()', this.calculateHash()
-        // );
+        console.log(
+            '\nisValid() ',
+            '\nfromAddress', this.fromAddress, 
+            '   (this.fromAddress === null) ', (this.fromAddress === null),
+            '\nthis.signature', this.signature, 
+            '\nthis.calculateHash()', this.calculateHash()
+        );
 
         if (this.fromAddress === null) {
             return true;
@@ -77,10 +78,10 @@ module.exports = class Transaction {
         const publicKey = ec.keyFromPublic(this.fromAddress, 'hex');
         const result = publicKey.verify(this.calculateHash(), this.signature);
         
-        // console.log(
-        //     '\npublicKey ', publicKey,
-        //     '\nisValid result ', result
-        // );
+        console.log(
+            '\npublicKey ', publicKey,
+            '\nisValid result ', result
+        );
 
         return result;
     }
