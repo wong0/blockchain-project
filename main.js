@@ -26,11 +26,11 @@ function testMiningBasic() {
 
     console.log('Mining block 1...');
     
-    xcoin.addBlock(new Block(1, "17/03/2020", { amount: 4 }));
+    xcoin.addBlock(new Block("17/03/2020", { amount: 4 }, ''));
     
     console.log('Mining block 2...');
     
-    xcoin.addBlock(new Block(2, "17/03/2020", { amount: 8 }));
+    xcoin.addBlock(new Block("17/03/2020", { amount: 8 }, ''));
 }
 // testMiningBasic();
 
@@ -81,7 +81,7 @@ function testSigningTransaction(shouldTamper) {
     let xCoin = new Blockchain();
     
     // Create a transaction
-    const tx1 = new Transaction(myWalletAddress, 'public key', 10)
+    const tx1 = new Transaction(myWalletAddress, 'public key', 10, 0)
 
     // Sign the transaction
     tx1.signTransaction(myKey);
@@ -110,7 +110,7 @@ function testSigningTransaction(shouldTamper) {
     console.log('\n--------------------------\nAdd another transaction...\n');
 
     // Create a transaction
-    const tx2 = new Transaction(myWalletAddress, 'public key', 20);
+    const tx2 = new Transaction(myWalletAddress, 'public key', 20, 1);
 
     // Sign the tx2 transaction
     tx2.signTransaction(myKey);
