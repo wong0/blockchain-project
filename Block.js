@@ -6,12 +6,12 @@ const SHA256 = require('crypto-js/sha256');
  */
 module.exports = class Block {
     constructor(timestamp, transactions, previousHash = ''){
+        this.index = 0;
+        this.hash = '';
+        this.previousHash = previousHash;
         this.timestamp = timestamp;
         this.transactions = transactions;
-        this.previousHash = previousHash;
-        this.hash = '';
         this.nonce = 0;
-        this.height = 0;
     }
 
     /**
@@ -44,5 +44,22 @@ module.exports = class Block {
             }
         }
         return true;
+    }
+
+    /**
+     * Block Integrity Validation
+     * 
+     * For block to be valid:
+     * - Index of block must be one number larger than previous
+     * - PreviousHash of block match hash of previous block
+     * - Hash of block itself must be valid
+     * 
+     * Is Valid New Block
+     */
+    isValidNewBlock(newBlock, previousBlock) {
+        if (previousBlock.index + 1 !== newBlock.index) return false
+        else if (previousBlock.hash !== newBlock.previousHash) return false
+        else if (this.hash(newBlock) !== newBlock.hash) return false
+        else return false
     }
 };
