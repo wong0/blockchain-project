@@ -76,7 +76,7 @@ MongoClient.connect(url, function(err, db) {
 //     previousHash: '07a6861b81748204f9205353e498c885020ed3290967a759aaa385ca27fd5e1c',
 //     hash: '0169cd33b6b487a27648d14d6e2db3852bb842a3d004d946b705a1a3526892c2',
 //     nonce: 22,
-//     height: 0 
+//     index: 0 
 //   };
 //   dbo.collection(dbCollectionName).insertOne(sampleBlock, function(err, res) {
 //     if (err) throw err;
@@ -101,7 +101,7 @@ MongoClient.connect(url, function(err, db) {
 
             block.hash = item.hash;
             block.nonce = item.nonce;
-            block.height = item.height;
+            block.index = item.index;
 
             xCoin.chain.push(block);
         });
