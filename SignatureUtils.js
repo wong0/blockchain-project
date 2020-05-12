@@ -14,8 +14,4 @@ module.exports = class SignatureUtils {
         console.debug(`Verified: ${verified}`);
         return verified;
     }
-    
-    toHex(data) {
-        return elliptic.utils.toHex(data);
-    }
 }
