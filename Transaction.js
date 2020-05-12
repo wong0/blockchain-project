@@ -28,12 +28,12 @@ module.exports = class Transaction {
      * added later on to the transaction.
      * @param {*} transaction 
      */
-    getTransactionId (transaction, isCoinbaseTransaction = false, blockHeight = '') {
-        const txInContent = transaction.txIns
+    getTransactionId (isCoinbaseTransaction = false, blockHeight = '') {
+        const txInContent = this.txIns
             .map((txIn) => txIn.txOutId + txIn.txOutIndex)
             .reduce((a, b) => a + b, '');
 
-        const txOutContent = transaction.txOuts
+        const txOutContent = this.txOuts
             .map((txOut) => txOut.address + txOut.amount)
             .reduce((a, b) => a + b, '');
 
@@ -41,7 +41,7 @@ module.exports = class Transaction {
             txOutContent + 
             (isCoinbaseTransaction ? blockHeight : '');
         
-        return CryptoJS.SHA256(hashContent).toString();
+        return SHA256(hashContent).toString();
     };
 
     /**
@@ -49,6 +49,15 @@ module.exports = class Transaction {
      */
     calculateHash() {
         return SHA256(this.fromAddress + this.toAddress + this.amount).toString();
+    }
+
+    calculateHashV2() {
+        const anyString = typeof (this) == 'object' ? 
+            JSON.stringify(this) : this.toString();
+
+        const hash = SHA256(anyString).toString();
+        
+        return hash;
     }
 
     /**

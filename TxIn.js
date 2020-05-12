@@ -1,9 +1,7 @@
+let SignatureUtil = require('SignatureUtils');
+
 module.exports = class TxIn {
-    constructor(    
-        txOutId,
-        txOutIndex,
-        signature
-    ) {
+    constructor(txOutId, txOutIndex, signature) {
         this.txOutId = txOutId
         this.txOutIndex = txOutIndex
         this.signature = signature
