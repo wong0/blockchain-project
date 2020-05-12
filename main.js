@@ -77,8 +77,11 @@ function testSigningTransaction(shouldTamper) {
     // Create Wallet address
     const myWalletAddress = myKey.getPublic('hex');
 
+    // Create KeyPair
+    const keyPair = ec.genKeyPair();
+
     // Initialize Blockchain
-    let xCoin = new Blockchain();
+    let xCoin = new Blockchain(keyPair);
     
     // Create a transaction
     const tx1 = new Transaction(myWalletAddress, 'public key', 10, 0)
