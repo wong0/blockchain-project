@@ -1,4 +1,4 @@
-let SignatureUtil = require('SignatureUtils');
+var SignatureUtil = require('./SignatureUtils');
 
 module.exports = class TxOut {
     constructor(address, amount) {
