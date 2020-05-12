@@ -16,6 +16,10 @@ node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2j
 // Dependencies
 //
 
+// Encryption dependencies
+const EC = require('elliptic').ec;
+const ec = new EC('secp256k1');
+
 // Networking dependencies
 var http = require("http");
 var request = require('request');
@@ -28,8 +32,6 @@ var bodyParser = require("body-parser");
 var Block = require('./Block');
 var Blockchain = require('./Blockchain');
 var Transaction = require("./Transaction");
-var EC = require('elliptic').ec;
-const ec = new EC('secp256k1');
 
 // Storage dependencies - Redis
 var redis = require('redis');
@@ -56,7 +58,8 @@ const dbCollectionName = "blockchain";
 //
 
 // Initialize Singleton Blockchain instance
-const xCoin = initializeBlockchain();
+var keyPair = ec.genKeyPair();
+const xCoin = new Blockchain(keyPair);
 
 MongoClient.connect(url, function(err, db) {
     if (err) throw err;
@@ -135,16 +138,11 @@ const myKey = ec.keyFromPrivate(privateKey)
 // Create Wallet address
 const myWalletAddress = myKey.getPublic('hex');
 
-
 // DEBUG
 // process.argv.forEach((val, index) => {
 //     console.log(`${index}: ${val}`)
 // });
 // console.log(process.argv[3]);
-
-function initializeBlockchain() {
-    return new Blockchain();
-}
 
 function triggerMineBlock() {
     // Create coinbase transaction from coinbase to me
