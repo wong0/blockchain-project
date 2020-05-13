@@ -63,8 +63,18 @@ It should say:
 https://redis.io/topics/quickstart
 
 ### Start Redis
-Start Redis, by running `redis server`. 
+Start Redis, by running `redis-server`. 
 To verify Redis is working, run `redis-cli ping`.
+
+### Generate a Key
+
+Run `node KeyGenerator.js` to generate public and private keys. 
+
+Result:
+
+Private Key:    3cc62e423157862d45999b033096ebd44c97e3a3a58176f6d8a0accc68f56b85
+Public Key:    046b3a1615633d4588d6baece7db6df88f80a22bfe91e5ac7ebe29c53bd6d3b7a753b1c8cff1db5740516aea51ebb189a1581bcb11bb74d45f5dbdd245d7df3bbb
+
 
 ### Run this Application
 
