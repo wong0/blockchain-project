@@ -108,7 +108,7 @@ function testSigningTransaction(shouldTamper) {
 
     console.log('Balance of myWalletAddress : ', xCoin.getBalanceOfAddress(myWalletAddress), '');
     console.log('Balance of "public key" Address : ', xCoin.getBalanceOfAddress('public key'), '');
-    console.log('Printout of xCoin whole blockchain : ', xCoin.chain);
+    console.log('Printout of xCoin whole blockchain : \n', xCoin.chain);
 
     console.log('\n--------------------------\nAdd another transaction...\n');
 
