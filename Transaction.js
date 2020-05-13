@@ -65,7 +65,7 @@ module.exports = class Transaction {
      * @param {} signingKey 
      */
     signTransaction(signingKey) {
-        // console.log(`signTransaction: \n${signingKey.getPublic('hex')}    \n${this.fromAddress}`);
+        console.log(`signTransaction: \n${signingKey.getPublic('hex')}    \n${this.fromAddress}`);
 
         if (signingKey.getPublic('hex') !== this.fromAddress) {
             throw new Error('You cannot sign transactions for other wallets!');
@@ -74,6 +74,7 @@ module.exports = class Transaction {
         const hashTx = this.calculateHash();
         const sig = signingKey.sign(hashTx, 'base64');
         this.signature = sig.toDER('hex');
+        return this.signature;
     }
 
     /**
@@ -83,7 +84,7 @@ module.exports = class Transaction {
         console.log(
             '\nisValid() ',
             '\nfromAddress', this.fromAddress, 
-            '   (this.fromAddress === null) ', (this.fromAddress === null),
+            '\n(this.fromAddress === null) ', (this.fromAddress === null),
             '\nthis.signature', this.signature, 
             '\nthis.calculateHash()', this.calculateHash()
         );
