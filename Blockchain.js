@@ -80,7 +80,7 @@ module.exports = class Blockchain{
      */
     createGenesisBlock(){
         console.log('Create Genesis Block\n');
-        return new Block("01/01/2017", [], "9");
+        return new Block("1589453315955", [], "");
     }
 
     getLatestBlock(){
