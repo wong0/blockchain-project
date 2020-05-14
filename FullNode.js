@@ -32,6 +32,7 @@ var bodyParser = require("body-parser");
 var Block = require('./Block');
 var Blockchain = require('./Blockchain');
 var Transaction = require("./Transaction");
+var TxOut = require("./TxOut");
 
 // Storage dependencies - Redis
 var redis = require('redis');
@@ -53,13 +54,33 @@ var url = "mongodb://localhost:27017/mydb";
 const dbName = "blockchain-coin-db";
 const dbCollectionName = "blockchain";
 
+// Add InvSender
+var InvSender = require('./InvSender');
+const invSender = new InvSender();
+
+//
+// Get Args
+//
+
+// Get NeighborNodeList arg
+const neighborNodeList = process.argv[3].split(',');
+
+// Get PrivateKey arg
+const privateKey = process.argv[4];
+
+// Create key
+const myKey = ec.keyFromPrivate(privateKey)
+
+// Create Wallet address
+const myWalletAddress = myKey.getPublic('hex');
+console.log('myWalletAddress', myWalletAddress, '\n');
+
 //
 // Initialization of Blockchain
 //
 
 // Initialize Singleton Blockchain instance
-var keyPair = ec.genKeyPair();
-const xCoin = new Blockchain(keyPair);
+const xCoin = new Blockchain(myKey);
 
 MongoClient.connect(url, function(err, db) {
     if (err) throw err;
@@ -110,33 +131,17 @@ MongoClient.connect(url, function(err, db) {
         });
 
         // After restoring queried blocks, print it out. 
-        // console.log(
-        //     '\nRetrieved xCoin.chain: \n', 
-        //     xCoin.chain
-        // );
+        console.log(
+            '\nRetrieved xCoin.chain from DB: \n', 
+            xCoin.chain
+        );
 
         db.close();
     });
 });
 
-// API dependencies
+// API caller dependencies
 var InvSender = require('./InvSender');
-
-//
-// Get Args
-//
-
-// Get NeighborNodeList arg
-const neighborNodeList = process.argv[3].split(',');
-
-// Get PrivateKey arg
-const privateKey = process.argv[4];
-
-// Create key
-const myKey = ec.keyFromPrivate(privateKey)
-
-// Create Wallet address
-const myWalletAddress = myKey.getPublic('hex');
 
 // DEBUG
 // process.argv.forEach((val, index) => {
@@ -167,41 +172,63 @@ async function startup() {
 
     console.log('neighborNodeList', neighborNodeList);
 
+    var i = 0;
     // Assumption: We know what the other nodes are.
     // send out /version calls
     neighborNodeList.forEach(neighborNode => {
         request(`${neighborNode}/getBlocks`, function (response, request, body) {
             // console.error('error:', error); // Print the error if one occurred
             // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-            console.log(`${neighborNode}/getBlocks: body:`, body , '\n'); // Print body
+            
+            console.log(
+                `${neighborNode}/getBlocks: `, 
+                // `\nreceived body:`, body, 
+                // '\ntypeof body', typeof body
+            ); // Print body
 
-            // save response to neighborNodeResponseList
-            // neighborNodeErrorList.push(error);
-            neighborNodeResponseList.push(body);
-            // neighborNodeBodyList.push(body);
+            // Save response to neighborNodeResponseList
+            if (body) {
+                neighborNodeResponseList.push(JSON.parse(body));
+            }
+
+            console.log(
+                'neighborNodeList.length-1', neighborNodeList.length-1, 
+                ', i', i
+            );
+
+            if (neighborNodeList.length-1 === i) {
+                // Find Longest chain.
+                var maxNeighborNodeBodyList = [];
+                neighborNodeResponseList.forEach(response => {
+                    if (response && response.length > maxNeighborNodeBodyList.length) {
+                        maxNeighborNodeBodyList = response;
+                    }
+                });
+
+                console.log(
+                    `xCoin.chain.length ${xCoin.chain.length}` , 
+                    `maxNeighborNodeBodyList.length ${maxNeighborNodeBodyList.length}`
+                );
+
+                // IF this node has a longer chain than the others, send inv.
+                // ELSE adopt longest chain received from getBlocks.
+                if (xCoin.chain.length > maxNeighborNodeBodyList.length) {
+                    // send Inv
+                    const invSender = new InvSender();
+                    invSender.sendInvToNeighbors(xCoin.chain, neighborNodeList);
+                } else {
+                    // Adopt longest chain
+                    xCoin.chain = maxNeighborNodeBodyList;
+
+                    // Save this chain!
+                    const blockchainSaver = new BlockchainSaver();
+                    blockchainSaver.saveBlockchainToDisk(xCoin.chain);
+                }
+            }
+
+            i++;
         });
     });
-
-    // Find Longest chain.
-    const maxNeighborNodeBodyList = null;
-    neighborNodeResponseList.forEach(response => {
-        if (response.length > maxNeighborNodeBodyList.length) {
-            maxNeighborNodeBodyList = response
-        }
-    })
-
-    neighborNodeBodyList = neighborNodeBodyList;
-
-    // IF this node has a longer chain than the others, send inv.
-    // ELSE adopt longest chain received from getBlocks.
-    if (xCoin.chain.length > maxNeighborNodeBodyList.length) {
-        // send Inv
-        const invSender = new InvSender();
-        invSender.sendInvToNeighbors();
-    } else {
-        // Adopt longest chain
-        xCoin.chain = maxNeighborNodeBodyList;
-    }
 }
 
 var app = express();
@@ -211,9 +238,10 @@ app.use(bodyParser.json());
 
 app.get('/getBlocks', function(req, res){
     // Handle GET Blocks
+    // console.debug('/getBlocks : ', xCoin.chain);
 
     // Send my inventory
-    res.send(JSON.stringify(xCoin.chain));
+    res.send(xCoin.chain);
 });
 
 app.post('/inv', function(req, res){
@@ -237,14 +265,60 @@ app.get('/triggerMineBlock', function(req, res) {
     }))
 });
 
+var TransactionSender = require('./TransactionSender');
+
+// Trigger transaction request from a sender (eg. Alice)
+app.post('/transactionRequest', function(req, res) {
+    
+    console.log('req.body.amount', req.body.amount, '\n');
+
+    console.log('req.body.receiveWalletAddress', req.body.receiveWalletAddress);
+
+    // Handle POST transaction received
+    console.log('/transactionRequest req.body', req.body, '\n');
+
+    const txIns = []; // txIns
+
+    const transaction = new Transaction(
+        myWalletAddress, // fromAddress,
+        req.body.receiveWalletAddress, // toAddress,
+        req.body.amount, // amount,
+        null, // id,
+        txIns, // txIns,
+        [
+            new TxOut(
+                req.body.receiveWalletAddress,
+                req.body.amount,
+            )
+        ] // txOuts
+    );
+
+    transaction.id = transaction.getTransactionId();
+
+    transaction.signTransaction(myKey);
+
+    // Add to my unpending transactions
+    xCoin.addTransaction(transaction);
+
+    // Let others know about this transaction
+    const transactionSender = new TransactionSender();
+    transactionSender.sendTransactionToNeighbors(transaction, neighborNodeList);
+    
+});
+
 var BlockchainSaver = require('./BlockchainSaver');
 
 app.post('/transaction', function(req, res) {
     // Handle POST transaction received
-    console.log('/transaction req.body', req.body, '\n');
+    console.log(
+        '/transaction req.body ', req.body, 
+        // ', res ', res, 
+        '\n'
+    );
 
     // parse into a transaction
-    res.send(JSON.stringify(req.body));
+
+    // res.send(JSON.stringify(req.body));
 
     // ASSUMPTION: req.body is a correct transaction.
     
@@ -255,7 +329,6 @@ app.post('/transaction', function(req, res) {
     const newBlock = xCoin.minePendingTransactions(myWalletAddress);
 
     // send '/inv' to broadcast new blockchain
-    const invSender = new InvSender();
     invSender.sendInvToNeighbors(xCoin.chain, neighborNodeList); 
 
     // Update my chain in DB

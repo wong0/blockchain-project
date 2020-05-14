@@ -79,49 +79,57 @@ function testSigningTransaction(shouldTamper) {
 
     // Create KeyPair
     const keyPair = ec.genKeyPair();
+    console.log('My KeyPair is ', keyPair.getPublic(), ' (public) , ', keyPair.getPrivate(), ' (private)');
 
     // Initialize Blockchain
+    console.log('Initialize Blockchain');
     let xCoin = new Blockchain(keyPair);
-    
+    console.log('xCoin ', xCoin);
+
     // Create a transaction
-    const tx1 = new Transaction(myWalletAddress, 'public key', 10, 0)
+    console.log('Create a transaction: \n');
+    const tx1 = new Transaction(myWalletAddress, 'receiver', 10, 0)
 
     // Sign the transaction
+    console.log('Sign a transaction: \n');
+
     tx1.signTransaction(myKey);
     // Add transaction to coin's (pendingTransactions)
     xCoin.addTransaction(tx1);
 
     // Mine the transaction
-    console.log('\nStarting miner...');
+    console.log('\nMine pending transactions, rewarding xaviers-address ...');
     xCoin.minePendingTransactions('xaviers-address');
     console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
 
     // Start the miner again
-    console.log('\Starting miner again...');
+    console.log('\nMine pending transactions, rewarding xaviers-address');
     xCoin.minePendingTransactions('xaviers-address');
-    console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
+    console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'), '\n');
 
     if (shouldTamper) {
         // do unauthorized modification 
         xCoin.chain[1].transactions[0].amount = 999999;
     }
 
-    console.log('Balance of myWalletAddress : ', xCoin.getBalanceOfAddress(myWalletAddress), '');
-    console.log('Balance of "public key" Address : ', xCoin.getBalanceOfAddress('public key'), '');
-    console.log('Printout of xCoin whole blockchain : \n', xCoin.chain);
+    console.log('Balance of myWalletAddress (sender address) : ', xCoin.getBalanceOfAddress(myWalletAddress), '\n');
+    console.log('Balance of receiver Address : ', xCoin.getBalanceOfAddress('public key'), '\n');
+    console.log('Printout of xCoin whole blockchain : \n', xCoin.chain, '\n');
 
     console.log('\n--------------------------\nAdd another transaction...\n');
 
     // Create a transaction
+    console.log('\nCreate tx2 Transaction ...');
     const tx2 = new Transaction(myWalletAddress, 'public key', 20, 1);
 
     // Sign the tx2 transaction
+    console.log('\nSign Transaction with my key');
     tx2.signTransaction(myKey);
     // Add transaction to coin's (pendingTransactions)
     xCoin.addTransaction(tx2);
 
     // Mine the tx2 transaction
-    console.log('\nStarting miner...');
+    console.log('\nMine pending transactions, rewarding xaviers-address');
     xCoin.minePendingTransactions('xaviers-address');
     console.log('\nBalance of xavier is ', xCoin.getBalanceOfAddress('xaviers-address'));
     

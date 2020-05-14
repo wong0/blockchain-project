@@ -2,6 +2,11 @@ const SHA256 = require('crypto-js/sha256');
 
 const Block = require("./Block");
 const Transaction = require("./Transaction");
+const TxOut = require("./TxOut");
+
+const SignatureUtils = require("./SignatureUtils");
+
+const signatureUtils = new SignatureUtils();
 
 /**
  * how often the difficulty should adjust to the increasing or decreasing network hashrate.
@@ -14,21 +19,6 @@ const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
 const BLOCK_GENERATION_INTERVAL = 10;
 
 module.exports = class Blockchain{
-
-    getDifficulty() {
-        const latestBlock = this.getLatestBlock();
-
-        const isTimeToAdjustDifficulty = 
-            latestBlock.index % DIFFICULTY_ADJUSTMENT_INTERVAL === 0 && 
-            latestBlock.index !== 0 && 
-            latestBlock.index > DIFFICULTY_ADJUSTMENT_INTERVAL;
-
-        if (isTimeToAdjustDifficulty) {
-            return getAdjustedDifficulty(latestBlock, this.chain);
-        } else {
-            return latestBlock.difficulty;
-        }
-    }
 
     getAdjustedDifficulty(latestBlock, blockchain) {
         // console.log(
@@ -57,12 +47,32 @@ module.exports = class Blockchain{
         }
     }
 
-    constructor(){
+    getDifficulty() {
+        const latestBlock = this.getLatestBlock();
+
+        const isTimeToAdjustDifficulty = 
+            latestBlock.index % DIFFICULTY_ADJUSTMENT_INTERVAL === 0 && 
+            latestBlock.index !== 0 && 
+            latestBlock.index > DIFFICULTY_ADJUSTMENT_INTERVAL;
+
+        if (isTimeToAdjustDifficulty) {
+            return this.getAdjustedDifficulty(latestBlock, this.chain);
+        } else if (latestBlock.difficulty) {
+            return latestBlock.difficulty;
+        } else {
+            return 1;
+        }
+    }
+
+    constructor(keyPair){
         this.chain = [this.createGenesisBlock()];
         this.pendingTransactions = [];
 
         // Mining Reward, AKA value of coinbase transaction
         this.miningReward = 100;
+
+        // Use keypair
+        this.keyPair = keyPair;
     }
 
     /**
@@ -79,14 +89,39 @@ module.exports = class Blockchain{
     }
 
     minePendingTransactions(miningRewardAddress) {
-        
-        // add Coinbase Transaction
-        this.createTransaction( new Transaction(null, miningRewardAddress, this.miningReward))
+        const coinBaseTxIns = [
+        ]; // Coinbase transaction has no Transactions In
+        const coinBaseTxOuts = [
+            new TxOut(miningRewardAddress, this.miningReward),
+        ]; // Coinbase Transactions Out
 
-        // mine block
-        const block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
+        // Create Coinbase Transaction
+        const coinBaseTransaction = new Transaction(
+            null, 
+            miningRewardAddress, // Todo hopefully we don't need this after sometime.
+            this.miningReward,
+            null,
+            coinBaseTxIns,
+            coinBaseTxOuts
+        );
+        const id = coinBaseTransaction.getTransactionId(true);
+        const msgHash = coinBaseTransaction.calculateHashV2();
+        const signature = signatureUtils.signHash(
+            this.keyPair,
+            msgHash
+        );
+        coinBaseTransaction.signature = signature;
 
+        // Add Coinbase Transaction
+        this.createTransaction(coinBaseTransaction);
+
+        console.log(`Adding Coinbase Transaction with id ${id}, \nmsgHash ${msgHash}, \nsignature ${signature}\n`)
+
+        // Mine block
+        const date = Date.now();
+        const block = new Block(date, this.pendingTransactions, this.getLatestBlock().hash);
         block.mineBlock(this.getDifficulty());
+        console.log(`Mine block at difficulty ${this.getDifficulty()}, at ${date}, with previous hash ${this.getLatestBlock().hash}.`)
 
         // chain push
         console.log('Block successfully mined!\n');
@@ -103,6 +138,10 @@ module.exports = class Blockchain{
         this.pendingTransactions.push(transaction);
     }
 
+    /**
+     * 
+     * @param {string} address 
+     */
     getBalanceOfAddress(address) {
         let balance = 0;
 
@@ -117,6 +156,9 @@ module.exports = class Blockchain{
                 }
             }
         }
+
+        console.debug(`getBalanceOfAddress(${address}) = ${balance} (coins)`);
+
         return balance;
     }
 
@@ -130,12 +172,14 @@ module.exports = class Blockchain{
     addBlock(newBlock){
         newBlock.index = (this.getLatestBlock().index ? this.getLatestBlock().index : 0) + 1;
         newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.mineBlock(this.difficulty);
+        newBlock.mineBlock(this.getDifficulty());
 
-        console.log(
-            'addBlock:\n',
+        console.debug(
+            'Add Block:\n',
             'newBlock: ', newBlock, 
-            '\nthis.difficulty', this.difficulty,
+            '\nthis.getDifficulty() (Calculated) ', this.getDifficulty(),
+            '\nthis.chain', this.chain,
+            '\ntypeof this.chain', typeof this.chain, '\n'
         );
 
         this.chain.push(newBlock);
@@ -146,7 +190,12 @@ module.exports = class Blockchain{
      * @param {*} transaction 
      */
     addTransaction(transaction) {
-        if (!transaction.fromAddress || !transaction.toAddress) {
+        console.log('Add Transaction: ', transaction);
+
+        if (
+            !transaction.fromAddress || 
+            !transaction.toAddress
+        ) {
             throw new Error('Transaction must include from, and to addresses');
         }
 
@@ -158,7 +207,7 @@ module.exports = class Blockchain{
     }
 
     isChainValid() {
-        console.log('isChainValid');
+        console.debug('isChainValid()');
 
         for(let i = 1; i < this.chain.length; i++) {
             const currentBlock = this.chain[i];

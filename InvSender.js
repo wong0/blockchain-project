@@ -4,11 +4,19 @@ module.exports = class InvSender {
     sendInvToNeighbors(myBlockchain, neighborNodeList) {
         console.log('sendInvToNeighbors', myBlockchain, neighborNodeList);
         neighborNodeList.forEach(neighborNode => {
-            request.post(
-                'http://127.0.0.1:8882/inv', 
-                // todo convert blockchain to sendable
-                myBlockchain
-            );
+            try {
+                request.post(
+                    `${neighborNode}/inv`, 
+                    // convert blockchain to sendable
+                    {
+                        json: myBlockchain
+                    }
+                ).on('error', function(err) {
+                    console.error(err)
+                });
+            } catch (exception) {
+                console.error(exception);
+            }
         });
     }
 };

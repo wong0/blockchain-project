@@ -66,6 +66,7 @@ module.exports = class Transaction {
      */
     signTransaction(signingKey) {
         console.log(`signTransaction: \n${signingKey.getPublic('hex')}    \n${this.fromAddress}`);
+        console.log(`signTransaction: Public key === address \n${signingKey.getPublic('hex') === this.fromAddress}`);
 
         if (signingKey.getPublic('hex') !== this.fromAddress) {
             throw new Error('You cannot sign transactions for other wallets!');

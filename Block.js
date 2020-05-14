@@ -26,17 +26,14 @@ module.exports = class Block {
     }
 
     hashMatchesDifficulty(hash, difficulty) {
-        // const hashInBinary = this.hexToBinary(hash);
         const requiredPrefix = '0'.repeat(difficulty);
 
         console.log(
             `hashMatchesDifficulty: hash:`, hash, 
-            // ', hashInBinary: ', hashInBinary, 
-            ' difficulty: ', difficulty, 
+            '\ndifficulty: ', difficulty, 
             '\n'
         );
 
-        // return hashInBinary.startsWith(requiredPrefix);
         return hash.startsWith(requiredPrefix);
     }
 
@@ -57,7 +54,7 @@ module.exports = class Block {
                 this.nonce = nonce;
                 this.hash = hash;
 
-                console.log("findBlock: Block mined:" + this.hash);
+                console.log("findBlock:\nBlock mined: hash:", this.hash, "\nthis.difficulty:", this.difficulty);
 
                 return this;
             }
