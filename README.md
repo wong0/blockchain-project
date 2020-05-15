@@ -91,7 +91,8 @@ node FullNode.js 8883 http://127.0.0.1:8881,http://127.0.0.1:8882 dnsfhai2ibrb2j
 
 Run `node main.js`
 
-### Node Address
+
+### Node Addresses
 
 Node 1:
 myWalletAddress 04d4e8c1f6b3bc603a5621d1bb3a3ff992c372bdf79f715b38120032ae0d0b69f3a595f85b2181c7db1f8eb7ab5c3323665d703a4888e9ef1dc79f2c4a963e83d0 
@@ -103,3 +104,15 @@ myWalletAddress 04d658dab68de18174b79b1673fd853994451a745d4b553a38293d7fc015602d
 
 Node 3:
 myWalletAddress 04f8f08060e0873024ca25fb5aade11e08c08f56c471cf4f1d556056b4a7d23312d5762f68e281445e3840a80d04af71bd77349264d61b2e6951c8d3cdd94fd7c4 
+
+
+### To trigger mining (eg. in Alice node)
+
+To trigger the node at port 8881, run `curl http://127.0.0.1:8881/triggerMineBlock`.
+
+{"success":true,"msg":"Block successfully mined!"}
+
+
+### Trigger Transaction (eg. in Alice node)
+
+To trigger transaction at port 8881, run `curl --header "Content-Type: application/json" --request POST --data "{\"amount\":100, \"receiveWalletAddress\":\"04f8f08060e0873024ca25fb5aade11e08c08f56c471cf4f1d556056b4a7d23312d5762f68e281445e3840a80d04af71bd77349264d61b2e6951c8d3cdd94fd7c4\"}" http://127.0.0.1:8881/transactionRequest`
