@@ -25,18 +25,19 @@ module.exports = class BlockchainSaver {
                 if (err) throw err;
                 console.log(`Collection '${dbCollectionName}' created!`);
             });
+
+            if (!Array.isArray(blockchain)) {
+                console.error('blockchain not array');
+            }
             
             // 4. Add each block of blockchain into collection
-            // dbo.collection(dbCollectionName).insertMany([{
-            //     "a": "b"
-            // }, {
-            //     "a": "b"
-            // }], 
-            // function(err, res) {
-            //     if (err) throw err;
-            //     console.log("Number of documents inserted: " + res.insertedCount);
-            //     db.close();
-            // });
+            dbo.collection(dbCollectionName).insertMany(blockchain,
+            function(err, res) {
+                if (err) throw err;
+                console.log("Number of documents inserted: " + res.insertedCount);
+                db.close();
+            });
+
             db.close();
         });
     }

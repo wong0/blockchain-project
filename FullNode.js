@@ -38,6 +38,8 @@ var TxOut = require("./TxOut");
 var redis = require('redis');
 var client = redis.createClient();
 
+var BlockchainSaver = require('./BlockchainSaver');
+
 // Storage Redis client init
 client.on('connect', function() {
     console.log('Redis is connected!\n');
@@ -249,6 +251,12 @@ app.post('/inv', function(req, res){
 
     // TODO take in blocks received.
     // If longer than mine, use theirs
+    if (req.body.length > xCoin.chain) {
+        xCoin.chain = req.body
+
+        const blockchainSaver = new BlockchainSaver();
+        blockchainSaver.saveBlockchainToDisk(xCoin.chain);
+    }
 
     console.log('/inv req.body', req.body, '\n');
     // console.log('/inv res', res);
@@ -306,8 +314,9 @@ app.post('/transactionRequest', function(req, res) {
     
 });
 
-var BlockchainSaver = require('./BlockchainSaver');
-
+/**
+ * Send transaction to others
+ */
 app.post('/transaction', function(req, res) {
     // Handle POST transaction received
     console.log(
@@ -316,14 +325,18 @@ app.post('/transaction', function(req, res) {
         '\n'
     );
 
-    // parse into a transaction
+    const transaction = req.body;
 
+    // parse into a transaction
     // res.send(JSON.stringify(req.body));
 
     // ASSUMPTION: req.body is a correct transaction.
     
     // put it in a pool of pendingTransactions.
-    xCoin.createTransaction(req.body)
+    xCoin.createTransaction(transaction)
+
+    // add this transaction to Redis
+    client.sadd("tx", JSON.stringify(transaction));
 
     // create a block to put this transaction, trigger mining, return mined newBlock
     const newBlock = xCoin.minePendingTransactions(myWalletAddress);

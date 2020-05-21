@@ -110,9 +110,11 @@ myWalletAddress 04f8f08060e0873024ca25fb5aade11e08c08f56c471cf4f1d556056b4a7d233
 
 To trigger the node at port 8881, run `curl http://127.0.0.1:8881/triggerMineBlock`.
 
+Result:
 {"success":true,"msg":"Block successfully mined!"}
 
 
 ### Trigger Transaction (eg. in Alice node)
 
 To trigger transaction at port 8881, run `curl --header "Content-Type: application/json" --request POST --data "{\"amount\":100, \"receiveWalletAddress\":\"04f8f08060e0873024ca25fb5aade11e08c08f56c471cf4f1d556056b4a7d23312d5762f68e281445e3840a80d04af71bd77349264d61b2e6951c8d3cdd94fd7c4\"}" http://127.0.0.1:8881/transactionRequest`
+
