@@ -7,7 +7,7 @@
         "body-parser": "^1.19.0",
         "crypto-js": "^4.0.0",
         "elliptic": "^6.5.2",
-        "express": "^4.8.7",
+        "express": "^4.17.3",
         "minimist": "^1.2.5",
         "mongodb": "^3.5.7",
         "redis": "^3.0.2",
